@@ -18,7 +18,7 @@ contract runElection {
     event CandidatesCount(uint256 count);
 
     // Event to log the winning candidate
-    event WinningCandidate(bytes32 candidateID);
+    event WinningCandidate(bytes32 candidateID, string name, uint256 votes);
 
     // Modifier to ensure that the election contract is initialized
     modifier electionContractInitialized() {
@@ -45,30 +45,29 @@ contract runElection {
         return votesReceived[_candidateID];
     }
 
+// Function to determine the winner of the election
+    function getWinner() public electionContractInitialized returns (string memory winnerName, uint256 maxVotes) {
+        maxVotes = 0;
+        bytes32 winningCandidateID = bytes32(0);
 
-    // Function to determine the winner of the election
-    function getWinner() public view electionContractInitialized returns (string memory, uint256) {
-        uint256 maxVotes = 0;
-        bytes32 winningCandidateID;
+        uint256 candidatesCount = electionContract.getNumberOfCandidatesAdded();
 
-        // uint256 candidatesCount = electionContract.getNumberOfCandidatesAdded();
-
-
-        // Iterate through all candidates to find the one with the most votes
         for (uint256 i = 0; i < candidatesCount; i++) {
-            (bytes32 candidateID, , , , ) = electionContract.getCandidateById(i);
-            uint256 candidateVotes = votesReceived[candidateID];
+            (bytes32 candidateID, string memory firstName, string memory lastName, ) = electionContract.getCandidateById(i);
+            uint256 candidateVotes = getVotesForCandidate(candidateID);
             if (candidateVotes > maxVotes) {
                 maxVotes = candidateVotes;
                 winningCandidateID = candidateID;
+                winnerName = string(abi.encodePacked(firstName, " ", lastName));
             }
         }
 
-        // Retrieve the winner's details
-        (, string memory firstName, string memory middleName, string memory lastName, ) = electionContract.getCandidateById(uint256(winningCandidateID));
-        string memory winnerName = string(abi.encodePacked(firstName, " ", middleName, " ", lastName));
+        if (maxVotes == 0) { // No votes case
+            winnerName = "No winner";
+        }
+
+        emit WinningCandidate(winningCandidateID, winnerName, maxVotes); // Emitting all three details as per the new event definition
         return (winnerName, maxVotes);
     }
-
 
 }
