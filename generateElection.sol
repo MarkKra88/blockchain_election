@@ -46,21 +46,20 @@ contract generateElection{
         allowedAddresses[_address] = true;
     }
 
-    Election[1] public listOfElections;
+    Election[1] public electionsDetails;
 
     function addElection (
         string memory _electionName,
         uint256 _maxNumberOfCandidates) public onlyAllowed notDisabled {
-            //listOfElections.push(Election(_electionName,_maxNumberOfCandidates));
-            require(bytes(listOfElections[0].electionName).length == 0, "To add another election, first you will have to complete adding the first one");
-            listOfElections[0] = Election(address(this),_electionName, _maxNumberOfCandidates,0);
+            //electionsDetails.push(Election(_electionName,_maxNumberOfCandidates));
+            require(bytes(electionsDetails[0].electionName).length == 0, "To add another election, first you will have to complete adding the first one");
+            electionsDetails[0] = Election(address(this),_electionName, _maxNumberOfCandidates,0);
     }
 
     // Candidate profile
     struct Candidate {
         bytes32 candidateID;
         string candidateFirstName;
-        string candidateMiddleName;
         string candidateLastName;
         uint256 candidateDOB;
     }
@@ -71,40 +70,36 @@ contract generateElection{
     // Add a new candidate to the list
     function addCandidate (
         string memory _candidateFirstName, 
-        string memory _candidateMiddleName,
         string memory _candidateLastName,
         uint256 _candidateDOB) public onlyAllowed notDisabled {
             // Generate unique candidate ID
             bytes32 _candidateID = keccak256(abi.encodePacked(
                 _candidateFirstName,
-                _candidateMiddleName,
                 _candidateLastName,
                 _candidateDOB
             ));
 
             //Ensure that number of cadidates won't exceed the threshold
-            require(listOfElections[0].numberOfCandidatesAdded < listOfElections[0].maxNumerOfCandidates, "Maximum number of candidates reached");
+            require(electionsDetails[0].numberOfCandidatesAdded < electionsDetails[0].maxNumerOfCandidates, "Maximum number of candidates reached");
 
             //Ensure that a candidate with the same ID will be added only once 
             require(!candidateExists[_candidateID], "Candidate already exists");
 
-            listOfCandidates.push(Candidate(_candidateID,_candidateFirstName,_candidateMiddleName,_candidateLastName,_candidateDOB));
+            listOfCandidates.push(Candidate(_candidateID,_candidateFirstName,_candidateLastName,_candidateDOB));
             candidateExists[_candidateID] = true;
             
             // Increment the number of candidates added for this election
-            listOfElections[0].numberOfCandidatesAdded++;
+            electionsDetails[0].numberOfCandidatesAdded++;
     }
 
     // Remove candidate from the list
     function removeCandidate (
         string memory _candidateFirstName, 
-        string memory _candidateMiddleName,
         string memory _candidateLastName,
         uint256 _candidateDOB) public onlyAllowed notDisabled {
             // Generate unique candidate ID
             bytes32 _candidateID = keccak256(abi.encodePacked(
                 _candidateFirstName,
-                _candidateMiddleName,
                 _candidateLastName,
                 _candidateDOB
             ));
@@ -116,7 +111,7 @@ contract generateElection{
                 if (listOfCandidates[i].candidateID == _candidateID) {
                     delete listOfCandidates[i];
                     candidateExists[_candidateID] = false;
-                    listOfElections[0].numberOfCandidatesAdded--;
+                    electionsDetails[0].numberOfCandidatesAdded--;
                     break;
 
                 }
@@ -139,14 +134,14 @@ contract generateElection{
 
     // Function to get the number of candidates added in an election
     function getNumberOfCandidatesAdded() public view returns (uint256) {
-        return listOfElections[0].numberOfCandidatesAdded;
+        return electionsDetails[0].numberOfCandidatesAdded;
     }
 
-    function getCandidateById(uint256 _index) public view returns (bytes32, string memory, string memory, string memory, uint256) {
+    function getCandidateById(uint256 _index) public view returns (bytes32, string memory, string memory, uint256) {
         require(_index < listOfCandidates.length, "Candidate index out of bounds");
 
         Candidate memory candidate = listOfCandidates[_index];
-        return (candidate.candidateID, candidate.candidateFirstName, candidate.candidateMiddleName, candidate.candidateLastName, candidate.candidateDOB);
+        return (candidate.candidateID, candidate.candidateFirstName, candidate.candidateLastName, candidate.candidateDOB);
     }
         
 }
